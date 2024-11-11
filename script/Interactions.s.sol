@@ -11,25 +11,25 @@ import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
 contract CreateSubscription is Script {
     function createSubscriptionUsingConfig() public returns (uint64, address) {
         HelperConfig helperConfig = new HelperConfig();
-        address vrfCoordinatorNew = helperConfig.getConfig().vrfCoordinator;
-        (uint64 subscriptionId,address vrfCoordinator) = createSubscription(vrfCoordinatorNew);
-        return (subscriptionId, vrfCoordinator);
+        address vrfCoordinatorV2_5 = helperConfig.getConfigByChainId(block.chainid).vrfCoordinatorV2_5;
+        address account = helperConfig.getConfigByChainId(block.chainid).account;
+        return createSubscription(vrfCoordinatorV2_5, account);
     }
 
-    function createSubscription(address vrfCoordinator) public returns (uint64, address) {
+    function createSubscription(address vrfCoordinatorV2_5, address account) public returns (uint64, address) {
         console.log("Creating subscription on chain id: ", block.chainid);
-        vm.startBroadcast();
+        vm.startBroadcast(account);
         VRFCoordinatorV2Mock vrfCoordinatorMock = new VRFCoordinatorV2Mock(uint96(0), uint96(0));
         
         uint64 subscriptionId = vrfCoordinatorMock.createSubscription();
         vm.stopBroadcast();
         console.log("Created subscription with id: ", subscriptionId);
         console.log("please update the subscription id in the HelperConfig.s.sol file");
-        return (subscriptionId, vrfCoordinator);
+        return (subscriptionId, vrfCoordinatorV2_5);
     }
 
     //openchain.xyz - helps converts hash to name
-    function run() public {
+    function run() public returns (uint256, address){
         createSubscriptionUsingConfig();
     }
 }
@@ -67,18 +67,18 @@ contract FundSubscription is Script, CodeConstants {
     function fundSubscriptionUsingConfig() public {
         HelperConfig helperConfig = new HelperConfig();
         uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
-        address vrfCoordinator = helperConfig.getConfig().vrfCoordinatorV2_5;
+        address vrfCoordinatorV2_5 = helperConfig.getConfig().vrfCoordinatorV2_5;
         address link = helperConfig.getConfig().link;
         address account = helperConfig.getConfig().account;
 
         if(subscriptionId == 0) {
              CreateSubscription createSub = new CreateSubscription();
             (uint256 updatedSubId, address updatedVRFv2) = createSub.run();
-            subId = updatedSubId;
+            subscriptionId = updatedSubId;
             vrfCoordinatorV2_5 = updatedVRFv2;
-            console.log("New SubId Created! ", subId, "VRF Address: ", vrfCoordinatorV2_5);
+            console.log("New SubId Created! ", subscriptionId, "VRF Address: ", vrfCoordinatorV2_5);
         }
-        fundSubscription(vrfCoordinatorV2_5, subId, link, account);
+        fundSubscription(vrfCoordinatorV2_5, subscriptionId, link, account);
     }
 
 
@@ -100,10 +100,6 @@ contract FundSubscription is Script, CodeConstants {
             vm.startBroadcast(account);
             LinkToken(link).transferAndCall(vrfCoordinatorV2_5, FUND_AMOUNT, abi.encode(subscriptionId));
             vm.stopBroadcast();
-
-            // vm.startBroadcast();
-            // LinkToken(linkToken).transferAndCall(vrfCoordinator, FUND_AMOUNT, abi.encode(subscriptionId));
-            // vm.stopBroadcast();
         }
         
     }

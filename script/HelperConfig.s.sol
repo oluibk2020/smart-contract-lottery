@@ -39,7 +39,6 @@ contract HelperConfig is CodeConstants, Script {
          uint256 automationUpdateInterval;
         uint256 raffleEntranceFee;
         uint32 callbackGasLimit;
-        uint256 interval;
         address vrfCoordinatorV2_5;
         address link;
         address account;
@@ -86,7 +85,8 @@ contract HelperConfig is CodeConstants, Script {
 
     //@dev https://docs.chain.link/vrf/v2-5/supported-networks
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory sepoliaNetworkConfig) {
-        return sepoliaNetworkConfig({
+
+        return sepoliaNetworkConfig = NetworkConfig({
             subscriptionId: 0,
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             automationUpdateInterval: 30, // 30 secs
@@ -111,7 +111,7 @@ contract HelperConfig is CodeConstants, Script {
         vm.startBroadcast();
         //get mock price from mock file
         VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock =
-            new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
+            new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UNIT_LINK);
             LinkToken link = new LinkToken();
             uint256 subscriptionId = vrfCoordinatorV2_5Mock.createSubscription();
         vm.stopBroadcast();
